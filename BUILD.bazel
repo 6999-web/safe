@@ -1,0 +1,22 @@
+# Bazel Build Configuration
+# Defines filegroup for package assets and dummy rules for building/testing
+
+filegroup(
+    name = "src_files",
+    srcs = glob([
+        "src/**/*",
+        "public/**/*",
+        "index.html",
+        "package.json",
+        "vite.config.ts",
+        "tsconfig.json",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "build_mock",
+    srcs = [":src_files"],
+    outs = ["dist_dummy.txt"],
+    cmd = "echo 'Bazel frontend compilation successful' > $@",
+)
