@@ -1,6 +1,7 @@
 export type UserRole = 'admin' | 'user';
 
 export interface User {
+  id: number;
   username: string;
   nickname: string;
   avatar: string;
@@ -9,51 +10,65 @@ export interface User {
   maxExp: number;
   points: number;
   completedTasks: number;
-  rank: number;
+  rank?: number;
   role: UserRole;
-  region?: string;
+  region?: string | null;
+  createdAt?: string;
 }
 
-export type TaskStatus = 'published' | 'accepted' | 'submitted' | 'completed';
+export type TaskStatus = 'published' | 'accepted' | 'completed';
 
 export interface Task {
-  id: string;
+  id: number;
   title: string;
   type: string;
   target: string;
   reward: number;
   points: number;
-  difficulty: number; // 1 to 5 stars
+  difficulty: number;
   description: string;
   deadline: string;
   status: TaskStatus;
-  acceptedBy?: string; // username
-  acceptedByName?: string; // nickname
+  acceptedBy?: string | null;
+  acceptedByName?: string | null;
   progressCount: number;
   createdAt: string;
+  completedAt?: string | null;
 }
+
+export type ReportStage = '信息收集' | '漏洞发现' | '成功提权' | '完成审计';
+export type ReportStatus = 'pending' | 'approved' | 'rejected';
 
 export interface ProgressReport {
-  id: string;
-  taskId: string;
+  id: number;
+  taskId: number;
   taskTitle: string;
-  developer: string; // username
-  developerName: string; // nickname
-  stage: '信息收集' | '漏洞发现' | '成功提权' | '完成审计';
+  developer: string;
+  developerName: string;
+  stage: ReportStage;
   reportText: string;
   submittedAt: string;
-  status: 'pending' | 'approved';
+  status: ReportStatus;
+  reviewedAt?: string | null;
 }
 
-export interface SecurityAlert {
-  id: string;
-  time: string;
-  type: 'danger' | 'warning' | 'info';
-  message: string;
-}
-
-export interface Announcement {
-  id: string;
-  title: string;
-  date: string;
+export interface AdminStats {
+  totals: {
+    tasks: number;
+    ongoing: number;
+    completed: number;
+    pendingReports: number;
+    highRiskTasks: number;
+    users: number;
+  };
+  typeDistribution: Array<{ type: string; count: number }>;
+  trend: Array<{ date: string; published: number; completed: number }>;
+  userWorkload: Array<{
+    username: string;
+    nickname: string;
+    points: number;
+    completedTasks: number;
+    activeTasks: number;
+    currentTasks: string[];
+  }>;
 }

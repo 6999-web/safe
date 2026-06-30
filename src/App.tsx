@@ -1,87 +1,85 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { LandingPage } from './components/LandingPage';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
 import { UserPanel } from './components/UserPanel';
 import { AdminPanel } from './components/AdminPanel';
+import { api, sessionStore } from './api';
 import { User } from './types';
-import { db } from './data/db';
 
 type ViewType = 'landing' | 'login' | 'register' | 'user' | 'admin';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('landing');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [booting, setBooting] = useState(true);
 
-  // Initialize DB on application startup
   useEffect(() => {
-    // Seeding DB if empty
-    db.getTasks();
-    db.getUsers();
-    db.getReports();
-
-    // Check if session exists in localStorage
-    const savedUser = localStorage.getItem('sec_intel_session_user');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser) as User;
-      setCurrentUser(parsedUser);
-      setCurrentView(parsedUser.role === 'admin' ? 'admin' : 'user');
+    const saved = sessionStore.load();
+    if (!saved) {
+      setBooting(false);
+      return;
     }
+
+    setCurrentUser(saved.user);
+    setCurrentView(saved.user.role === 'admin' ? 'admin' : 'user');
+    api.me()
+      .then(({ user }) => {
+        sessionStore.save(user, saved.token);
+        setCurrentUser(user);
+        setCurrentView(user.role === 'admin' ? 'admin' : 'user');
+      })
+      .catch(() => {
+        sessionStore.clear();
+        setCurrentUser(null);
+        setCurrentView('landing');
+      })
+      .finally(() => setBooting(false));
   }, []);
 
-  const handleNavigate = (view: ViewType) => {
-    setCurrentView(view);
-  };
-
-  const handleLoginSuccess = (user: User) => {
+  const handleLoginSuccess = (user: User, token: string) => {
+    sessionStore.save(user, token);
     setCurrentUser(user);
-    localStorage.setItem('sec_intel_session_user', JSON.stringify(user));
     setCurrentView(user.role === 'admin' ? 'admin' : 'user');
   };
 
   const handleLogout = () => {
+    sessionStore.clear();
     setCurrentUser(null);
-    localStorage.removeItem('sec_intel_session_user');
     setCurrentView('landing');
   };
 
-  const handleRegisterSuccess = () => {
-    setCurrentView('login');
-  };
+  if (booting) {
+    return <div style={styles.bootScreen}>正在连接真实数据服务...</div>;
+  }
 
   return (
     <>
-      {currentView === 'landing' && (
-        <LandingPage onNavigate={handleNavigate} />
-      )}
-      
+      {currentView === 'landing' && <LandingPage onNavigate={setCurrentView} />}
       {currentView === 'login' && (
-        <LoginPage 
-          onLoginSuccess={handleLoginSuccess} 
-          onNavigate={handleNavigate} 
-        />
+        <LoginPage onLoginSuccess={handleLoginSuccess} onNavigate={setCurrentView} />
       )}
-
       {currentView === 'register' && (
-        <RegisterPage 
-          onRegisterSuccess={handleRegisterSuccess} 
-          onNavigate={handleNavigate} 
-        />
+        <RegisterPage onRegisterSuccess={handleLoginSuccess} onNavigate={setCurrentView} />
       )}
-
       {currentView === 'user' && currentUser && (
-        <UserPanel 
-          user={currentUser} 
-          onLogout={handleLogout} 
-        />
+        <UserPanel user={currentUser} onLogout={handleLogout} />
       )}
-
       {currentView === 'admin' && currentUser && (
-        <AdminPanel 
-          user={currentUser} 
-          onLogout={handleLogout} 
-        />
+        <AdminPanel user={currentUser} onLogout={handleLogout} />
       )}
     </>
   );
 }
+
+const styles: { [key: string]: React.CSSProperties } = {
+  bootScreen: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#02060f',
+    color: '#8ab4f8',
+    fontSize: '14px',
+  },
+};
