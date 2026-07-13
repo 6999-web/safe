@@ -1,7 +1,7 @@
 param(
     [string]$BaseUrl = 'http://127.0.0.1:39999/api',
-    [string]$CompanyPassword = 'Company@123',
-    [string]$AdminPassword = 'Admin@123456'
+    [string]$CompanyPassword = 'WhCompany@2026!4Lm8',
+    [string]$AdminPassword = 'WhAdmin@2026!7Kp9'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -39,6 +39,7 @@ $password = 'E2Etest@123'
 Invoke-TestApi 'unauthenticated profile' GET '/user/profile' $null '' @(401) | Out-Null
 $registration = Invoke-TestApi 'register whitehat' POST '/register' @{ username = $username; password = $password; nickname = 'E2E Researcher'; email = "$username@example.com" }
 $whiteToken = $registration.data.token
+Invoke-TestApi 'duplicate username rejected' POST '/register' @{ username = $username; password = $password; nickname = 'Duplicate E2E'; email = "duplicate-$username@example.com" } '' @(409) | Out-Null
 $companyToken = (Invoke-TestApi 'company login' POST '/login' @{ username = 'acme'; password = $CompanyPassword }).data.token
 $adminToken = (Invoke-TestApi 'admin login' POST '/login' @{ username = 'admin'; password = $AdminPassword }).data.token
 Invoke-TestApi 'wrong password rejected' POST '/login' @{ username = 'acme'; password = 'wrong-password' } '' @(400) | Out-Null

@@ -15,8 +15,8 @@
 - 平台安全态势大屏、任务大厅、白帽中心、企业工作台和安全社区
 - PostgreSQL Flyway 迁移、Redis、Docker Compose 与第三方集成适配器
 
-详细设计见 [架构](docs/ARCHITECTURE.md)、[ER 图](docs/ER.md) 和
-[API 文档](docs/API.md)。
+详细设计见 [架构](docs/ARCHITECTURE.md)、[ER 图](docs/ER.md)、
+[API 文档](docs/API.md)和[使用与测试账号](docs/使用与测试账号.md)。
 
 ## 目录
 
@@ -72,9 +72,9 @@ docker compose --profile integrations up -d
 
 | 角色 | 用户名 | 默认密码 |
 |---|---|---|
-| 白帽研究员 | `whitehat` | `WhiteHat@123` |
-| 企业管理员 | `acme` | `Company@123` |
-| 平台管理员 | `admin` | `Admin@123456` |
+| 白帽研究员 | `whitehat` | `WhResearch@2026!3Qx7` |
+| 企业管理员 | `acme` | `WhCompany@2026!4Lm8` |
+| 平台管理员 | `admin` | `WhAdmin@2026!7Kp9` |
 
 生产环境第一次登录后应立即修改所有初始化密码，并关闭或替换示例数据。
 

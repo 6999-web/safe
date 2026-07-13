@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     ResponseEntity<ApiResponse<Void>> business(BusinessException e) { return ResponseEntity.badRequest().body(new ApiResponse<>(400, e.getMessage(), null)); }
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<ApiResponse<Void>> conflict(ConflictException e) { return ResponseEntity.status(409).body(new ApiResponse<>(409, e.getMessage(), null)); }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ApiResponse<Void>> validation(MethodArgumentNotValidException e) {
         String msg=e.getBindingResult().getFieldErrors().stream().map(x->x.getField()+": "+x.getDefaultMessage()).collect(Collectors.joining("; "));
@@ -23,4 +25,3 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiResponse<Void>> unknown(Exception e) { return ResponseEntity.status(500).body(new ApiResponse<>(500,"服务器内部错误",null)); }
 }
-

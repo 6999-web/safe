@@ -18,7 +18,7 @@ import java.util.List;
 @Component
 @Order(100)
 public class DemoDataInitializer implements CommandLineRunner {
-    @Value("${DEMO_PASSWORD:Research@123}")
+    @Value("${DEMO_PASSWORD:WhDemo@2026!8Nz5}")
     private String demoPassword;
     private final UserMapper users;
     private final CompanyMapper companies;
@@ -110,7 +110,12 @@ public class DemoDataInitializer implements CommandLineRunner {
 
     private User ensureUser(String username, String password, String nickname, int score, String skills) {
         User user = users.selectOne(Wrappers.<User>lambdaQuery().eq(User::getUsername, username));
-        if (user != null) return user;
+        if (user != null) {
+            if (!encoder.matches(password, user.getPasswordHash())) {
+                user.setPasswordHash(encoder.encode(password)); user.setUpdatedAt(OffsetDateTime.now()); users.updateById(user);
+            }
+            return user;
+        }
         user = new User();
         user.setUsername(username); user.setPasswordHash(encoder.encode(password)); user.setNickname(nickname);
         user.setRole("WHITEHAT"); user.setScore(score); user.setLevelId(levelFor(score)); user.setSkills(skills);

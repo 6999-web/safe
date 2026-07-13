@@ -24,10 +24,10 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-whitehat}
       REDIS_HOST: redis
       JWT_SECRET: ${JWT_SECRET:-development-secret-change-this-before-production}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
-      WHITEHAT_PASSWORD: ${WHITEHAT_PASSWORD:-WhiteHat@123}
-      COMPANY_PASSWORD: ${COMPANY_PASSWORD:-Company@123}
-      DEMO_PASSWORD: ${DEMO_PASSWORD:-Research@123}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-WhAdmin@2026!7Kp9}
+      WHITEHAT_PASSWORD: ${WHITEHAT_PASSWORD:-WhResearch@2026!3Qx7}
+      COMPANY_PASSWORD: ${COMPANY_PASSWORD:-WhCompany@2026!4Lm8}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-WhDemo@2026!8Nz5}
     volumes: [uploads:/app/uploads]
     depends_on:
       postgres: {condition: service_healthy}
