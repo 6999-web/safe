@@ -1,4 +1,8 @@
-param([string]$BaseUrl = 'http://127.0.0.1:39999/api')
+param(
+    [string]$BaseUrl = 'http://127.0.0.1:39999/api',
+    [string]$CompanyPassword = 'Company@123',
+    [string]$AdminPassword = 'Admin@123456'
+)
 
 $ErrorActionPreference = 'Stop'
 $results = [System.Collections.Generic.List[object]]::new()
@@ -35,8 +39,8 @@ $password = 'E2Etest@123'
 Invoke-TestApi 'unauthenticated profile' GET '/user/profile' $null '' @(401) | Out-Null
 $registration = Invoke-TestApi 'register whitehat' POST '/register' @{ username = $username; password = $password; nickname = 'E2E Researcher'; email = "$username@example.com" }
 $whiteToken = $registration.data.token
-$companyToken = (Invoke-TestApi 'company login' POST '/login' @{ username = 'acme'; password = 'Company@123' }).data.token
-$adminToken = (Invoke-TestApi 'admin login' POST '/login' @{ username = 'admin'; password = 'Admin@123456' }).data.token
+$companyToken = (Invoke-TestApi 'company login' POST '/login' @{ username = 'acme'; password = $CompanyPassword }).data.token
+$adminToken = (Invoke-TestApi 'admin login' POST '/login' @{ username = 'admin'; password = $AdminPassword }).data.token
 Invoke-TestApi 'wrong password rejected' POST '/login' @{ username = 'acme'; password = 'wrong-password' } '' @(400) | Out-Null
 
 $start = (Get-Date).ToString('yyyy-MM-dd')
