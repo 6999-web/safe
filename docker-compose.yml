@@ -1,0 +1,92 @@
+name: whitehat-hub
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-whitehat}
+      POSTGRES_USER: ${POSTGRES_USER:-whitehat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-whitehat}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck: {test: [CMD-SHELL, "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"], interval: 5s, timeout: 5s, retries: 20}
+    restart: unless-stopped
+  redis:
+    image: redis:7.2-alpine
+    command: redis-server --appendonly yes
+    volumes: [redis_data:/data]
+    healthcheck: {test: [CMD, redis-cli, ping], interval: 5s, timeout: 3s, retries: 20}
+    restart: unless-stopped
+  backend:
+    build: ./backend
+    ports: ["${BACKEND_PORT:-39999}:8080"]
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-whitehat}
+      DB_USER: ${POSTGRES_USER:-whitehat}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-whitehat}
+      REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET:-development-secret-change-this-before-production}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
+      WHITEHAT_PASSWORD: ${WHITEHAT_PASSWORD:-WhiteHat@123}
+      COMPANY_PASSWORD: ${COMPANY_PASSWORD:-Company@123}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-Research@123}
+    volumes: [uploads:/app/uploads]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck: {test: [CMD-SHELL, "wget -qO- http://localhost:8080/api/dashboard/stats >/dev/null || exit 1"], interval: 10s, timeout: 5s, retries: 20}
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports: ["${FRONTEND_PORT:-5001}:80"]
+    depends_on:
+      backend: {condition: service_healthy}
+    restart: unless-stopped
+  ctfd:
+    image: ctfd/ctfd:latest
+    profiles: [integrations]
+    ports: ["5004:8000"]
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-whitehat}:${POSTGRES_PASSWORD:-whitehat}@postgres:5432/${POSTGRES_DB:-whitehat}"
+      REDIS_URL: redis://redis:6379/1
+      SECRET_KEY: ${CTFD_SECRET:-change-me}
+    depends_on: [postgres, redis]
+  taiga:
+    image: taigaio/taiga-back:latest
+    profiles: [integrations]
+    ports: ["5005:8000"]
+    environment:
+      TAIGA_SECRET_KEY: ${TAIGA_SECRET:-change-me}
+      TAIGA_DB_HOST: postgres
+      TAIGA_DB_NAME: ${POSTGRES_DB:-whitehat}
+      TAIGA_DB_USER: ${POSTGRES_USER:-whitehat}
+      TAIGA_DB_PASSWORD: ${POSTGRES_PASSWORD:-whitehat}
+    depends_on: [postgres]
+  flarum:
+    image: mondedie/flarum:latest
+    profiles: [integrations]
+    ports: ["5006:8888"]
+    environment:
+      DEBUG: "false"
+      FORUM_URL: http://localhost:5006
+      DB_HOST: flarum-db
+      DB_NAME: flarum
+      DB_USER: flarum
+      DB_PASS: ${POSTGRES_PASSWORD:-whitehat}
+    depends_on: [flarum-db]
+  flarum-db:
+    image: mariadb:11
+    profiles: [integrations]
+    environment:
+      MYSQL_DATABASE: flarum
+      MYSQL_USER: flarum
+      MYSQL_PASSWORD: ${POSTGRES_PASSWORD:-whitehat}
+      MYSQL_ROOT_PASSWORD: ${POSTGRES_PASSWORD:-whitehat}
+    volumes: [flarum_db:/var/lib/mysql]
+  defectdojo:
+    image: defectdojo/defectdojo-django:latest
+    profiles: [integrations]
+    ports: ["5007:8081"]
+    environment:
+      DD_DATABASE_URL: "postgresql://${POSTGRES_USER:-whitehat}:${POSTGRES_PASSWORD:-whitehat}@postgres:5432/${POSTGRES_DB:-whitehat}"
+      DD_SECRET_KEY: ${DEFECTDOJO_SECRET:-change-me}
+    depends_on: [postgres, redis]
+volumes: {postgres_data: {}, redis_data: {}, uploads: {}, flarum_db: {}}
